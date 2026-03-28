@@ -1,39 +1,49 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 
-const Token = sequelize.define("Token", {
+const GoogleAccount = sequelize.define("GoogleAccount", {
     id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true
     },
+
     userId: {
         type: DataTypes.UUID,
         allowNull: false,
+        unique: true,
         references: {
             model: 'Users',
             key: 'id'
         }
     },
-    token: {
-        type: DataTypes.TEXT,
+
+    googleId: {
+        type: DataTypes.STRING,
         allowNull: false,
         unique: true
     },
-    expiresAt: {
-        type: DataTypes.DATE,
+
+    accessToken: {
+        type: DataTypes.TEXT,
         allowNull: false
+    },
+
+    refreshToken: {
+        type: DataTypes.TEXT,
+        allowNull: false
+    },
+
+    tokenExpiry: {
+        type: DataTypes.DATE,
+        allowNull: true
     }
+
 }, {
     indexes: [
-        {
-            unique: true,
-            fields: ['token']
-        },
-        {
-            fields: ['userId']
-        }
+        { fields: ["userId"] },
+        { unique: true, fields: ["googleId"] }
     ]
 });
 
-module.exports = Token;
+module.exports = GoogleAccount;
