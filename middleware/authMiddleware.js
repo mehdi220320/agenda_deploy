@@ -4,7 +4,7 @@ const Token = require('../models/Token');
 const GoogleAccount = require('../models/GoogleAccount');
 const { google } = require("googleapis");
 const User =require('../models/User');
-require('../models/associations');
+require('../models/Associations');
 
 const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
