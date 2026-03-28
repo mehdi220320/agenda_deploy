@@ -13,7 +13,9 @@ const { initSocket } = require("./socket");
 const http = require("http");
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
+console.log(`Server running on port ${PORT}`);
 app.use(cors({
     origin: ['http://localhost:5173','http://localhost:5174'],
     credentials: true,
@@ -57,7 +59,6 @@ async function createAdmin() {
     }
 }
 
-const PORT = process.env.PORT || 5000;
 server.listen(PORT, async () => {
     console.log(`Server running on port ${PORT}`);
     const msg = await createAdmin();
