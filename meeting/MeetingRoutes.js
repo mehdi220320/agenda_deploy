@@ -5,7 +5,7 @@ const User = require("../models/User");
 const nodemailer = require('nodemailer');
 const { authentication,googleAuth } = require('../middleware/authMiddleware');
 const { google } = require("googleapis");
-require('../models/associations');
+require('../models/Associations');
 const { col,fn } = require("sequelize");
 const {createNotification} = require("../notification/NotificationService");
 
