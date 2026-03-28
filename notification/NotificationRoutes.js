@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const NotificationService = require("./NotificationService");
 const Notification=require("./Notification");
-require('../models/associations');
+require('../models/Associations');
 const { googleAuth,authentication } = require('../middleware/authMiddleware');
 
 router.get("/", googleAuth, async (req, res) => {

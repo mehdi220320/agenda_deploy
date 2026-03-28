@@ -3,7 +3,7 @@ const router = express.Router();
 const { authentication,adminAuthorization,googleAuth } = require('../middleware/authMiddleware');
 const ExpertProfile=require('./ExpertProfile');
 const { fn, col } = require("sequelize");
-require('../models/associations');
+require('../models/Associations');
 const User = require("../models/User");
 router.post("/add",adminAuthorization,async (req,res)=>{
     try {
