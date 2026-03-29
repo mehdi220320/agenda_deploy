@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 5000;
 
 console.log(`Server running on port ${PORT}`);
 app.use(cors({
-    origin: ['http://localhost:5173','http://localhost:5174'],
+    origin: ['http://localhost:5173','http://localhost:5174','https://frabjous-swan-96078f.netlify.app'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
 }));
