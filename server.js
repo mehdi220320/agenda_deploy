@@ -52,10 +52,10 @@ sequelize.sync({ alter: true })
 async function createAdmin() {
     try {
         const { firstname, lastname, role, email, password } = {
-            firstname: "med",
-            lastname: "mehdi",
-            role: "user",
-            email: "medmehdi1920@gmail.com",
+            firstname: "user",
+            lastname: "admin",
+            role: "admin",
+            email: "admin@gmail.com",
             password: "admin123*"
         };
 
