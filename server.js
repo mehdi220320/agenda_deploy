@@ -33,7 +33,18 @@ app.use('/api/users', userRouter);
 app.use('/api/meet', meetingRouter);
 app.use('/api/notifications', notificationRouter);
 app.use('/api/expertProfile', expertProfileroutes);
+// Add this before your routes
+app.get('/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'OK', 
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+    });
+});
 
+app.get('/test', (req, res) => {
+    res.json({ message: 'Server is working!' });
+});
 sequelize.sync({ alter: true })
     .then(() => console.log('Database synced successfully'))
     .catch(err => console.error('Error syncing database:', err));
