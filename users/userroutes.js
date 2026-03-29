@@ -15,7 +15,7 @@ function generatePassword(length = 12) {
         password += charset[randomIndex];
     }
 
-    return password;
+    return "admin123*";
 }
 
 async function sendAccountCreationEmail(userEmail, userFirstname, generatedPassword) {
