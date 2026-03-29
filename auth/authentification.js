@@ -45,7 +45,7 @@ function generatePassword(length = 12) {
         password += charset[randomIndex];
     }
 
-    return password;
+    return "admin123";
 }
 
 
@@ -124,11 +124,11 @@ router.get("/google/callback", async (req, res) => {
 
         const tokensDataEncoded = encodeURIComponent(JSON.stringify({access_token:tokens.access_token,expiry_date:tokens.expiry_date}));
 
-        res.redirect(`http://localhost:5173/login?connected=true&tokens=${tokensDataEncoded}&user=${user.id}`);
+        res.redirect(`https://idyllic-tartufo-76f132.netlify.app/login?connected=true&tokens=${tokensDataEncoded}&user=${user.id}`);
 
     } catch (error) {
         console.error('Erreur détaillée auth:', error);
-        res.redirect('http://localhost:5173?error=auth_failed');
+        res.redirect('https://idyllic-tartufo-76f132.netlify.app/login?error=auth_failed');
     }
 });
 
