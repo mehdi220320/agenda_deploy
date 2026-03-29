@@ -202,8 +202,8 @@ router.post('/add', googleAuth, async (req, res) => {
         });
 
 
-        // ( test it without await) sendMeetingCreationEmail(req.user.email, meetUrl);
-        // await sendMeetingCreationEmail(expert.email, meetUrl);
+        sendMeetingCreationEmail(req.user.email, meetUrl);
+        sendMeetingCreationEmail(expert.email, meetUrl);
 
         await createNotification({
             title:"Nouvelle réunion créée "+summary,
