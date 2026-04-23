@@ -1,0 +1,13 @@
+const { Queue } = require("bullmq");
+const IORedis = require("ioredis");
+
+const connection = new IORedis({
+    host: process.env.REDIS_HOST,
+    port: process.env.REDIS_PORT,
+    maxRetriesPerRequest: null
+
+});
+
+const alarmQueue = new Queue("alarm-queue", { connection });
+
+module.exports = { alarmQueue, connection };

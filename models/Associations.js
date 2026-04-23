@@ -8,6 +8,7 @@ const GoogleAccount=require("./GoogleAccount")
 const  Meeting = require('../meeting/Meeting');
 const Notification=require("../notification/Notification");
 const ExpertProfile=require("../expertProfile/ExpertProfile")
+const Conversation=require("../messenger/Conversation");
 User.hasOne(Token, {
     foreignKey: "userId",
     onDelete: "CASCADE",
@@ -84,3 +85,13 @@ ExpertProfile.belongsTo(User,{
     foreignKey: "expert",
     as: "expertUser"
 })
+User.hasMany(Conversation, {
+    foreignKey: 'client',
+    as: 'conversations',
+    onDelete: 'CASCADE'
+});
+
+Conversation.belongsTo(User, {
+    foreignKey: 'client',
+    as: 'clientData'
+});

@@ -5,7 +5,7 @@ const ExpertProfile=require('./ExpertProfile');
 const { fn, col } = require("sequelize");
 require('../models/Associations');
 const User = require("../models/User");
-router.post("/add",adminAuthorization,async (req,res)=>{
+router.post("/add",authentication,async (req,res)=>{
     try {
         const {competences,expertId,category,bio,experience,languages,headline,socialLinks}=req.body;
 

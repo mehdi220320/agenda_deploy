@@ -6,7 +6,7 @@ const nodemailer = require('nodemailer');
 const { authentication,googleAuth } = require('../middleware/authMiddleware');
 const { google } = require("googleapis");
 require('../models/Associations');
-const { col,fn } = require("sequelize");
+const { col,fn,Op } = require("sequelize");
 const {createNotification} = require("../notification/NotificationService");
 
 async function sendMeetingCreationEmail(userEmail, description) {
@@ -202,8 +202,8 @@ router.post('/add', googleAuth, async (req, res) => {
         });
 
 
-        sendMeetingCreationEmail(req.user.email, meetUrl);
-        sendMeetingCreationEmail(expert.email, meetUrl);
+        // ( test it without await) sendMeetingCreationEmail(req.user.email, meetUrl);
+        // await sendMeetingCreationEmail(expert.email, meetUrl);
 
         await createNotification({
             title:"Nouvelle réunion créée "+summary,
@@ -249,7 +249,7 @@ router.post('/add', googleAuth, async (req, res) => {
     }
 });
 
-router.get('/clientMeet/:id', async (req, res) => {
+router.get('/clientMeet/:id',googleAuth, async (req, res) => {
     try {
         const meeting = await Meeting.findByPk(req.params.id, {
             attributes: [
@@ -300,7 +300,7 @@ router.get('/clientMeet/:id', async (req, res) => {
     }
 });
 
-router.get('/expertMeet/:id', async (req, res) => {
+router.get('/expertMeet/:id', authentication,async (req, res) => {
     try {
         const meeting = await Meeting.findByPk(req.params.id, {
             attributes: [
@@ -410,7 +410,36 @@ router.get('/expert', authentication, async (req, res) => {
 router.get('/client',googleAuth, async (req, res) => {
     try {
         const userId = req.user.id;
+        const number = req.query.number ? parseInt(req.query.number) : null;
+        if (number != null) {
+            const nextMeetings = await Meeting.findAll({
+                where: {
+                    creator: userId,
+                    date: { [Op.gte]: new Date() }
+                },
+                order: [["date", "ASC"]],
+                limit: number,
+                attributes: [
+                    "id",
+                    "summary",
+                    "description",
+                    "date",
+                    "slotDuration",
+                    "meetUrl",
+                    "jitsiRoom",
+                    [fn("concat", col("expertUser.firstname"), " ", col("expertUser.lastname")), "expert"]
+                ],
+                include: [
+                    {
+                        model: User,
+                        as: "expertUser",
+                        attributes: []
+                    }
+                ]
+            });
 
+            return res.status(200).send({ meetings: nextMeetings });
+        }
         const meetings = await Meeting.findAll({
             where: { creator: userId },
             order: [["date", "DESC"]],
@@ -481,4 +510,76 @@ router.get('/room/:jitsiRoom', async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+
+router.get('/nextMeet',googleAuth, async (req, res) => {
+    try {
+        const meet = await Meeting.findOne({
+            where: {
+                creator: req.user.id,
+                date: { [Op.gte]: new Date() }
+            },
+            attributes: [
+                "id",
+                "summary",
+                "description",
+                "date",
+                "slotDuration",
+                "meetUrl",
+                "jitsiRoom",
+                [fn("concat", col("expertUser.firstname"), " ", col("expertUser.lastname")), "expert"]
+            ],
+            include: [
+                {
+                    model: User,
+                    as: "expertUser",
+                    attributes: []
+                }
+            ],
+            order: [['date', 'ASC']]
+        });
+
+        if (!meet) {
+            return res.status(404).send({ message: "You have no upcoming meetings" });
+        }
+
+        res.status(200).send({ meet });
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+router.get('/meetCount',googleAuth,async(req,res)=>{
+    try{
+        const count=await Meeting.count();
+        res.status(200).send({count:count});
+    }catch (e) {
+        res.status(500).send({error:e.message})
+    }
+})
+
+router.get('/myclients',authentication,async(req,res)=>{
+    try {
+        const userId=req.user.userId;
+        const meetings = await Meeting.findAll({
+            where: { expert: userId },
+            order: [["date", "DESC"]],
+            attributes: [
+                "id",
+                "summary"
+            ],
+            include: [
+                {
+                    model: User,
+                    as: "creatorUser",
+                    attributes: ["id", "firstname","lastname","picture","role", "email"]
+                }
+            ]
+        });
+        res.send(meetings)
+    }catch(error){
+        res.status(500).json({message:error.message})
+    }
+})
+
 module.exports = router;

@@ -24,7 +24,16 @@ const Notification = sequelize.define("Notification", {
         references: {
             model: 'Meetings',
             key: 'id'
-        }
+        },
+        allowNullable: true,
+    },
+    note:{
+        type: DataTypes.UUID,
+        references: {
+            model: 'Notes',
+            key: 'id'
+        },
+        allowNullable: true,
     },
     read: { type: DataTypes.BOOLEAN, defaultValue: false }
 });

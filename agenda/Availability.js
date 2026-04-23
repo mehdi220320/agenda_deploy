@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
+const User = require("../models/User");
 
 const Availability = sequelize.define("Availability", {
     id: {
@@ -13,6 +14,18 @@ const Availability = sequelize.define("Availability", {
         references: {
             model: 'Users',
             key: 'id'
+        },
+        validate:{
+            async isUserExpert(value) {
+                const user = await User.findByPk(value);
+                if (!user) {
+                    throw new Error('User not found');
+                }
+                if (user.role !== 'expert') {
+                    throw new Error('Only users with EXPERT role can be assigned as expert');
+                }
+                return true;
+            }
         }
     },
     dayOfWeek: {

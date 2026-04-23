@@ -3,9 +3,106 @@ const User = require("../models/User");
 const router = express.Router();
 const nodemailer = require('nodemailer');
 require('dotenv').config();
-const { adminAuthorization,googleAuth } = require('../middleware/authMiddleware');
+const { adminAuthorization,googleAuth,authentication } = require('../middleware/authMiddleware');
+const multer = require('multer');
+const uploadToCloudinary= require('../config/cloudinary')
 
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
+router.post('/adduser',adminAuthorization, upload.single('picture'),async (req, res) => {
+    try {
+        const { firstname, lastname, email, phone, role  } = req.body;
+        const password= generatePassword(12)
+        console.log("password generated ahawa ", password)
+        const existingUser = await User.findOne({ where: { email } });
+
+        if (existingUser) {
+            return res.status(400).send({ message: "User already exists" });
+        }
+        let photoUrl = null;
+
+        if (req.file) {
+            const result = await uploadToCloudinary(req.file.buffer);
+            photoUrl = result.secure_url;
+        }
+        const user = await User.create({
+            firstname,
+            lastname,
+            email,
+            phone,
+            password,
+            role,
+            picture:photoUrl
+        });
+        try {
+            await sendAccountCreationEmail(email, firstname, password);
+            console.log(`Email sent successfully to ${email}`);
+        } catch (emailError) {
+            console.error('Error sending email:', emailError);
+        }
+        const userResponse = user.toJSON();
+        delete userResponse.password;
+        res.status(201).send({
+            message: "Expert registered successfully",
+            user
+        });
+
+    } catch (e) {
+        res.status(500).send({ message: e.message });
+    }
+});
+
+router.patch('/picture/:id',adminAuthorization,upload.single('picture'),async(req,res)=>{
+    try {
+        const id=req.params.id;
+        let user=await User.findByPk(id);
+        let photoUrl = null;
+
+        if (req.file) {
+            const result = await uploadToCloudinary(req.file.buffer,req.file.originalname);
+            photoUrl = result.secure_url;
+        }else{
+            res.status(401).json({error:"picture not found"});
+        }
+        user.picture=photoUrl;
+        await user.save();
+        delete user.password;
+        res.status(200).json({message:"picture updated successfuly",user:user})
+    }catch (e) {
+        res.status(500).json({message:e.message})
+    }
+})
+router.patch('/mypicture',authentication,upload.single('picture'),async(req,res)=>{
+    try {
+        const id=req.user.userId;
+        let user=await User.findByPk(id);
+        let photoUrl = null;
+
+        if (req.file) {
+            const result = await uploadToCloudinary(req.file.buffer);
+            photoUrl = result.secure_url;
+        }else{
+            res.status(401).json({error:"picture not found"});
+        }
+        user.picture=photoUrl;
+        await user.save();
+        res.status(200).json({message:"picture updated successfuly",user:user})
+    }catch (e) {
+        res.status(500).json({message:e.message})
+    }
+})
+router.get('/myData',authentication,async(req,res)=>{
+    try {
+        const userId=req.user.userId;
+        const user=await User.findByPk(userId);
+        if(!user) res.status(404).send({error:"user not found"});
+        delete user.password;
+        res.status(200).json(user);
+    }catch (e) {
+        res.status(500).json({error:e.message})
+    }
+})
 function generatePassword(length = 12) {
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
     let password = "";
@@ -15,7 +112,7 @@ function generatePassword(length = 12) {
         password += charset[randomIndex];
     }
 
-    return "admin123*";
+    return password;
 }
 
 async function sendAccountCreationEmail(userEmail, userFirstname, generatedPassword) {
@@ -239,42 +336,6 @@ async function sendAccountCreationEmail(userEmail, userFirstname, generatedPassw
     await transporter.sendMail(mailOptions);
 }
 
-router.post('/adduser',adminAuthorization, async (req, res) => {
-    try {
-        const { firstname, lastname, email, phone, role  } = req.body;
-        const password= generatePassword(12)
-        console.log("password generated ahawa ", password)
-        const existingUser = await User.findOne({ where: { email } });
-
-        if (existingUser) {
-            return res.status(400).send({ message: "User already exists" });
-        }
-
-        const user = await User.create({
-            firstname,
-            lastname,
-            email,
-            phone,
-            password,
-            role,
-        });
-        try {
-            await sendAccountCreationEmail(email, firstname, password);
-            console.log(`Email sent successfully to ${email}`);
-        } catch (emailError) {
-            console.error('Error sending email:', emailError);
-        }
-        const userResponse = user.toJSON();
-        delete userResponse.password;
-        res.status(201).send({
-            message: "Expert registered successfully",
-            user
-        });
-
-    } catch (e) {
-        res.status(500).send({ message: e.message });
-    }
-});
 
 router.get('/all',adminAuthorization,async (req,res)=>{
     try {
@@ -290,8 +351,11 @@ router.get('/all',adminAuthorization,async (req,res)=>{
 
 router.get('/experts',googleAuth,async(req,res)=>{
     try {
-        const users=await User.findAll({where: {role: "expert"}});
-        res.send({experts:users})
+        const users = await User.findAll({
+            where: { role: "expert" },
+            attributes: { exclude: ["password"] }
+        });
+        res.send({ experts: users });
     }catch (e) {
         res.status(500).send({message:e.message});
     }
@@ -304,9 +368,28 @@ router.get('/expert/:id',googleAuth,async(req,res)=>{
             id:id,role:"expert"
             }})
         if(!expert) res.status(501).send({message:"Expert not found"});
+        delete expert.password;
         res.status(200).send({expert:expert})
     }catch (e){
         res.status(500).send({message:e.message});
+    }
+})
+
+router.get('/user/:id',authentication,async(req,res)=>{
+    try {
+        const user=await User.findByPk(req.params.id);
+        delete user.password;
+        res.send({user:user})
+    }catch (e) {
+        res.status(500).send({error:e.message})
+    }
+})
+router.get('/expertCount',googleAuth,async(req,res)=>{
+    try{
+        const count=await User.count({where:{role:"expert"},});
+        res.status(200).send({count:count});
+    }catch (e) {
+        res.status(500).send({error:e.message})
     }
 })
 
