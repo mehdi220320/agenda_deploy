@@ -6,7 +6,7 @@ const registerRoutes = require('./routes');
 const User = require('./models/User.js');
 const { initSocket } = require("./socket");
 const http = require("http");
-const startWorker = require("./Worker");
+const startWorker = require("./worker");
 const app = express();
 
 app.use(cors({
