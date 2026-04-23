@@ -10,7 +10,7 @@ const startWorker = require("./worker");
 const app = express();
 
 app.use(cors({
-    origin: ['http://localhost:5173','http://localhost:5174'],
+    origin: ['http://localhost:5173','http://localhost:5174','https://frabjous-swan-96078f.netlify.app','https://idyllic-tartufo-76f132.netlify.app'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
 }));
