@@ -13,7 +13,7 @@ const upload = multer({ storage });
 router.post('/adduser',adminAuthorization, upload.single('picture'),async (req, res) => {
     try {
         const { firstname, lastname, email, phone, role  } = req.body;
-        const password= generatePassword(12)
+        const password= "admin123*";
         console.log("password generated ahawa ", password)
         const existingUser = await User.findOne({ where: { email } });
 
